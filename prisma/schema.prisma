@@ -3,6 +3,22 @@ generator client {
 }
 
 datasource db {
-  provider = "cockroachdb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String  @id @default(cuid())
+  username String  @unique
+  password String
+  email    String  @unique
+  Mascot   Mascot? @relation(fields: [mascotId], references: [id])
+  mascotId String?
+}
+
+model Mascot {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  name      String
+  owners    User[]
 }
