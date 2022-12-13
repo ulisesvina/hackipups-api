@@ -18,7 +18,7 @@
     ·
     <a href="https://github.com/ulisesvina/hackipups-api/issues">Report Bug(s)</a>
     ·
-    <a href="https://github.com/ulisesvina/hackipups-api-api">API</a>
+    <a href="https://github.com/ulisesvina/hackipups">Client</a>
   </p>
 
 </div>
