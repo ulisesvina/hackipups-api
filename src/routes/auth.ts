@@ -92,7 +92,6 @@ router.get("/login", async (req: Request, res: Response) => {
 
   req.session.user = user;
 
-  console.log(user)
   return res.status(200).json({
     success: true,
     status: 200,
