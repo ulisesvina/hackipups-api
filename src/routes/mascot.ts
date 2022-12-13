@@ -1,10 +1,10 @@
 import { Request, Response, Router } from "express";
+import { Socket } from "socket.io";
 
 const router = Router();
 
-router.get("/", (req: Request, res: Response) => {
-    req.app.get("socket").emit("message", "Hello World!");
-    res.send("1")
+router.post("/create-mascot", (req: Request, res: Response) => {
+ 
 });
 
 export default router;

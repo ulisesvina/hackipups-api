@@ -4,6 +4,7 @@ import { createServer } from "http";
 import dotenv from "dotenv";
 import cors from "cors";
 import { Server } from "socket.io";
+import session from "express-session";
 import swaggerUi from "swagger-ui-express";
 import { readFileSync } from "fs";
 
@@ -39,6 +40,14 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 app.use(
+  session({
+    secret: process.env["SESSION_SECRET"] as string,
+    resave: true,
+    saveUninitialized: true,
+    cookie: { maxAge: 31536000000 },
+  })
+);
+app.use(
   "/docs",
   swaggerUi.serve,
   swaggerUi.setup(swaggerDocument, { explorer: true })
@@ -50,7 +59,7 @@ app.disable("x-powered-by");
 app.use("/auth", Auth);
 app.use("/mascot", Mascot);
 
-app.set("socket", io);
+app.set("trust proxy", 1);
 
 io.attach(server, {
   pingInterval: 10000,
@@ -58,17 +67,9 @@ io.attach(server, {
   cookie: false,
 });
 
-io.on("connection", (socket) => {
-  console.log("A user has connected");
-
-  socket.on("join", (room) => {
-    console.log(`A user has joined ${room}`);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("A user has disconnected");
-  });
-})
+app.get("/get-session", (req, res) => {
+  res.send(req.session);
+});
 
 server.listen(PORT, () => {
   console.log(`Sever is running on http://localhost:${PORT}`);

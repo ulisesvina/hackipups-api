@@ -1,8 +1,6 @@
 import { Router, Request, Response } from "express";
 import Prisma from "@prisma/client";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import CheckAuth from "../middlewares/checkAuth";
 
 const router: Router = Router();
 const client: Prisma.PrismaClient = new Prisma.PrismaClient();
@@ -92,24 +90,15 @@ router.get("/login", async (req: Request, res: Response) => {
     });
   }
 
+  req.session.user = user;
+
+  console.log(user)
   return res.status(200).json({
     success: true,
     status: 200,
-    token: jwt.sign(
-      {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        mascot: user.mascotId,
-      },
-      process.env.JWT_SECRET as string,
-      {
-        expiresIn: "1y",
-      }
-    ),
   });
 });
-
+/* 
 router.post(
   "/change-password",
   CheckAuth,
@@ -144,5 +133,5 @@ router.post(
       });
   }
 );
-
+ */
 export default router;
