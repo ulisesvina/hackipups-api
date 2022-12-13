@@ -1,0 +1,17 @@
+{
+  "swagger": "2.0",
+  "host": "api.hackipups.com",
+  "basePath": "/",
+  "schemes": [
+    "https"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "info": {
+    "title": "Hackipups API",
+    "description": "Server-side processing for Hackipups, it includes endpoints for user authentication, management, mascot creation/saving and more.",
+    "version": "0.1.0"
+  },
+  "paths": {}
+}
