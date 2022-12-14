@@ -6,19 +6,9 @@ import cors from "cors";
 import { Server } from "socket.io";
 import session from "express-session";
 import swaggerUi from "swagger-ui-express";
-import { readFileSync } from "fs";
-
-const swaggerDocument = JSON.parse(
-  readFileSync(`${__dirname}/swagger.json`, "utf8")
-);
-
-/* 
-   Before I get any comments for line above, I do know that resolveJsonModule is a thing, but
-   it won't update at runtime, which is a pain in the ass for using at development.
-
-   Also, Intellisense was bitching about me not having that flag set to true, while tsconfig.json
-   did have it set to true.
-*/
+import swaggerDocument from "./swagger.json";
+import Redis from "ioredis";
+import connectRedis from "connect-redis";
 
 // Routes
 import Auth from "./routes/auth";
@@ -33,7 +23,9 @@ const app: Express.Application = Express(),
     },
     path: "/socket",
     serveClient: false,
-  });
+  }),
+  RedisStore = connectRedis(session),
+  redisClient = new Redis();
 
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
@@ -45,6 +37,7 @@ app.use(
     resave: true,
     saveUninitialized: true,
     cookie: { maxAge: 31536000000 },
+    store: new RedisStore({ client: redisClient }),
   })
 );
 app.use(
@@ -65,10 +58,6 @@ io.attach(server, {
   pingInterval: 10000,
   pingTimeout: 5000,
   cookie: false,
-});
-
-app.get("/get-session", (req, res) => {
-  res.send(req.session);
 });
 
 server.listen(PORT, () => {

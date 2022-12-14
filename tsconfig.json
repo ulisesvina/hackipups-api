@@ -1,12 +1,10 @@
 {
   "compilerOptions": {
-    "sourceMap": true,
+    "resolveJsonModule": true,
     "typeRoots": ["./src/types", "./node_modules/@types"],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "moduleResolution": "node",
     "esModuleInterop": true,
-    "declaration": false,
     "target": "es2016",
     "lib": ["es2019"],
     "module": "commonjs",
