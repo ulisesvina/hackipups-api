@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express";
 
 const router = Router();
 
-router.post("/create-mascot", (req: Request, res: Response) => {
+router.post("/create-pet", (req: Request, res: Response) => {
  
 });
 

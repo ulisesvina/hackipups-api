@@ -100,7 +100,7 @@ router.post("/login", async (req: Request, res: Response) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        mascot: user.mascotId,
+        pet: user.petId,
       },
       process.env.JWT_SECRET as string,
       {

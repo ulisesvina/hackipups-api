@@ -13,11 +13,11 @@ model User {
   username String  @unique
   password String
   email    String  @unique
-  Mascot   Mascot? @relation(fields: [mascotId], references: [id])
-  mascotId String?
+  Pet   Pet? @relation(fields: [petId], references: [id])
+  petId String?
 }
 
-model Mascot {
+model Pet {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   name      String
