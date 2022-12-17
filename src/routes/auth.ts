@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import Prisma from "@prisma/client";
 import bcrypt from "bcrypt";
+import { sign } from "jsonwebtoken";
 import CheckAuth from "../middlewares/checkAuth";
 
 const router: Router = Router();
@@ -56,14 +57,6 @@ router.post("/register", async (req: Request, res: Response) => {
 });
 
 router.post("/login", async (req: Request, res: Response) => {
-  if (typeof req.session.user !== "undefined") {
-    return res.status(400).json({
-      success: false,
-      status: 400,
-      message: "You are already logged in",
-    });
-  }
-
   const { login, password } = req.body;
 
   if (!login || !password) {
@@ -99,11 +92,21 @@ router.post("/login", async (req: Request, res: Response) => {
     });
   }
 
-  req.session.user = user;
-
   return res.status(200).json({
     success: true,
     status: 200,
+    token: sign(
+      {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        mascot: user.mascotId,
+      },
+      process.env.JWT_SECRET as string,
+      {
+        expiresIn: "1y",
+      }
+    ),  
   });
 });
 
@@ -119,7 +122,7 @@ router.post("/change-password", CheckAuth, async (req: Request, res: Response) =
   client.user
     .update({
       where: {
-        id: req.session.user.id as string,
+        id: req.locals.user.id as string,
       },
       data: {
         password: await bcrypt.hash(newPassword, 10),
@@ -136,20 +139,6 @@ router.post("/change-password", CheckAuth, async (req: Request, res: Response) =
         error: err,
       });
     });
-});
-
-router.delete("/logout", CheckAuth, async (req: Request, res: Response) => {
-  req.session.destroy((err: Error) => {
-    if (err) {
-      return res.status(500).json({
-        error: err,
-      });
-    }
-    return res.status(200).json({
-      success: true,
-      status: 200,
-    });
-  });
 });
 
 export default router;
