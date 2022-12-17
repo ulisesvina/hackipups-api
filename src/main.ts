@@ -3,12 +3,10 @@ import Express from "express";
 import { createServer } from "http";
 import dotenv from "dotenv";
 import cors from "cors";
-import { Server } from "socket.io";
-import session from "express-session";
+import { Server, Socket } from "socket.io";
 import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "./swagger.json";
-import Redis from "ioredis";
-import connectRedis from "connect-redis";
+import SocketAuth from "./middlewares/socketAuth";
 
 // Routes
 import Auth from "./routes/auth";
@@ -22,24 +20,13 @@ const app: Express.Application = Express(),
       origin: "*",
     },
     path: "/socket",
-    serveClient: false,
-  }),
-  RedisStore = connectRedis(session),
-  redisClient = new Redis();
+    serveClient: true,
+  });
 
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
 
-app.use(
-  session({
-    secret: process.env["SESSION_SECRET"] as string,
-    resave: true,
-    saveUninitialized: true,
-    cookie: { maxAge: 31536000000 },
-    store: new RedisStore({ client: redisClient }),
-  })
-);
 app.use(
   "/docs",
   swaggerUi.serve,
@@ -51,13 +38,40 @@ app.use(cors());
 app.disable("x-powered-by");
 app.use("/auth", Auth);
 app.use("/mascot", Mascot);
-
 app.set("trust proxy", 1);
 
 io.attach(server, {
   pingInterval: 10000,
   pingTimeout: 5000,
   cookie: false,
+});
+
+io.use(SocketAuth);
+
+io.on("connection", (socket: Socket) => {
+  socket.on("join", (room: string) => {
+    if(socket.rooms.size >= 1) {
+      socket.disconnect();
+    }
+
+    const users: number = io.sockets.adapter.rooms.get(room)?.size || 0;
+
+    switch (users) {
+      case 2:
+        socket.emit("full");
+        break;
+      case 1:
+        socket.join(room);
+        io.to(room).emit("ready");
+        break;
+      default:
+        socket.join(room);
+    }
+
+    socket.on("create mascot", (data: object) => {
+      
+    });
+  });
 });
 
 server.listen(PORT, () => {
