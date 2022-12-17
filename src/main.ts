@@ -55,11 +55,11 @@ io.on("connection", (socket: Socket) => {
       socket.disconnect();
     }
 
-    const users = io.sockets.adapter.rooms.get(room)?.size || 0;
+    const users = io.sockets.adapter.rooms.get(room);
 
     if (
-      (room !== username && users !== 1) ||
-      users === 2 ||
+      (room !== username && users?.size !== 1) ||
+      users?.size === 2 ||
       usersInRooms.includes(username)
     ) {
       socket.disconnect();
@@ -68,7 +68,11 @@ io.on("connection", (socket: Socket) => {
     socket.join(room);
     usersInRooms.push(username);
 
+    users?.delete(socket.id);
+    
     socket.on("create pet", async (data: any) => {
+      const pet = petController.create({ ...data, user1: username, user2: io.sockets.sockets.get(<any>[...users||[]][0])?.data.user.id });
+      io.to(room).emit("pet created", pet);
     });
 
     socket.on("disconnect", () => {

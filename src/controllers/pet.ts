@@ -4,7 +4,7 @@ const prisma: PrismaClient = new PrismaClient();
 
 const controls: any = {
   create: async (data: any) => {
-    const pet: object = await prisma.pet.create({
+    const pet = await prisma.pet.create({
       data: {
         name: data.name,
         owners: {
@@ -13,9 +13,7 @@ const controls: any = {
       },
     });
 
-    return {
-      success: true,
-    };
+    return pet;
   },
 };
 
