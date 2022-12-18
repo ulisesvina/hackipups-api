@@ -109,8 +109,8 @@ Sheldon, the mascot of hackipups-api was named by the lead maintainer's girlfrie
 
 - [x] Functioning CRUD
 - [x] Auth
-- [ ] Actually, I regret. Let's go back to JWT.
-- [ ] Real-time functionality using websockets
+- [x] JWT Implementation
+- [x] Real-time functionality using websockets
 
 See the [open issues](https://github.com/ulisesvina/hackipups-api/issues) for a full list of known issues.
 
