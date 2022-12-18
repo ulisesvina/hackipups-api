@@ -6,9 +6,9 @@ import { Server, Socket } from "socket.io";
 import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "./swagger.json";
 import socketAuth from "./middlewares/socketAuth";
-import authRoute from "./routes/auth";
-import petRoute from "./routes/pet";
-import petController from "./controllers/pet";
+import AuthRoute from "./routes/auth";
+import PetRoute from "./routes/pet";
+import PetController from "./controllers/pet";
 
 const app = express();
 const server = http.createServer(app);
@@ -34,8 +34,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.disable("x-powered-by");
-app.use("/auth", authRoute);
-app.use("/mascot", petRoute);
+app.use("/auth", AuthRoute);
+app.use("/pet", PetRoute);
 app.set("trust proxy", 1);
 
 io.attach(server, {
@@ -48,37 +48,73 @@ io.use(socketAuth);
 
 const usersInRooms = new Array();
 
-io.on("connection", (socket: Socket) => {
-  socket.on("join", (room: string) => {
-    const username = socket.data.user.username;
-    if (socket.rooms.size > 1) {
+io.on("connection", (socket) => {
+  const userId: string = socket.data.user.id,
+    username: string = socket.data.user.username;
+
+  let room: string = "";
+
+  socket.on("join", (data: string) => {
+    room = data;
+    if (usersInRooms.includes(userId)) {
+      socket.emit("error", "You are already in a room");
       socket.disconnect();
+      return;
     }
 
-    const users = io.sockets.adapter.rooms.get(room);
+    const roomUsers = io.sockets.adapter.rooms.get(room);
 
     if (
-      (room !== username && users?.size !== 1) ||
-      users?.size === 2 ||
+      (room !== username && roomUsers?.size !== 1) ||
+      roomUsers?.size === 2 ||
       usersInRooms.includes(username)
     ) {
       socket.disconnect();
     }
 
     socket.join(room);
-    usersInRooms.push(username);
 
-    users?.delete(socket.id);
-    
-    socket.on("create pet", async (data: any) => {
-      const pet = petController.create({ ...data, user1: username, user2: io.sockets.sockets.get(<any>[...users||[]][0])?.data.user.id });
-      io.to(room).emit("pet created", pet);
-    });
+    if (roomUsers?.size === 2) {
+      io.to(room).emit("ready");
+    }
 
-    socket.on("disconnect", () => {
-      io.to(room).emit("left");
-      usersInRooms.splice(usersInRooms.indexOf(username), 1);
-    });
+    usersInRooms.push(userId);
+  });
+
+  socket.on("create pet", async (data) => {
+    console.log(JSON.stringify(data));
+    const { name } = data;
+
+    const currentRoom = io.sockets.adapter.rooms.get(room as string);
+
+    if (currentRoom && currentRoom.size === 2) {
+      const sockets: any = Array.from(currentRoom);
+      let otherUserSocket = sockets[0];
+      if (otherUserSocket === socket.id) {
+        otherUserSocket = sockets[1];
+      }
+
+      otherUserSocket = io.sockets.sockets.get(otherUserSocket);
+
+      const otherUserId = otherUserSocket.data.user.id;
+
+      try {
+        const response = await PetController.create({
+          name,
+          user1: userId,
+          user2: otherUserId,
+        });
+
+        if (!response.success) {
+          socket.emit("error", response.error);
+          return;
+        }
+
+        io.to(room).emit("pet created", response.pet);
+      } catch (error: any) {
+        socket.emit("error", error.message);
+      }
+    }
   });
 });
 
