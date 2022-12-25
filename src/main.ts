@@ -57,8 +57,7 @@ io.on("connection", (socket) => {
   socket.on("join", (data: string) => {
     room = data;
     if (usersInRooms.includes(userId)) {
-      socket.emit("error", "You are already in a room");
-      socket.disconnect();
+      socket.emit("error", "You are already in a room,");
       return;
     }
 
@@ -69,7 +68,8 @@ io.on("connection", (socket) => {
       roomUsers?.size === 2 ||
       usersInRooms.includes(username)
     ) {
-      socket.disconnect();
+      socket.emit("error", "You can only join a room with another user in it.");
+      return;
     }
 
     socket.join(room);
